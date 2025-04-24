@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可拖拽积木块</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            width: 500px;
+            height: 500px;
+            border: 2px solid #333;
+            position: relative;
+            background-color: #ffffff;
+        }
+
+        .block {
+            width: 100px;
+            height: 100px;
+            background-color: blue;
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            touch-action: none;
+            left: 0;            
+            top: 0;
+        }
+
+        .block.dragging {
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="block"></div>
+    </div>
+
+    <script>
+        const block = document.querySelector('.block');
+        const container = document.querySelector('.container');
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        block.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+
+        block.addEventListener('touchstart', dragStart);
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('touchend', dragEnd);
+
+        function dragStart(e) {
+            if (e.type === 'touchstart') {
+                initialX = e.touches[0].clientX - xOffset;
+                initialY = e.touches[0].clientY - yOffset;
+            } else {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+            }
+
+            if (e.target === block) {
+                isDragging = true;
+            }
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+
+                if (e.type === 'touchmove') {
+                    currentX = e.touches[0].clientX - initialX;
+                    currentY = e.touches[0].clientY - initialY;
+                } else {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                }
+
+                // 只在实际移动时添加半透明效果
+                block.classList.add('dragging');
+
+                // 获取容器的边界
+                const containerRect = container.getBoundingClientRect();
+                const blockRect = block.getBoundingClientRect();
+                
+                // 计算相对于容器的位置
+                const relativeX = currentX;
+                const relativeY = currentY;
+
+                // 限制在容器内
+                const maxX = 400; // 容器宽度 - 积木块宽度 (500 - 100)
+                const maxY = 400; // 容器高度 - 积木块高度 (500 - 100)
+
+                currentX = Math.min(Math.max(relativeX, 0), maxX);
+                currentY = Math.min(Math.max(relativeY, 0), maxY);
+
+                xOffset = currentX;
+                yOffset = currentY;
+
+                setTranslate(currentX, currentY, block);
+            }
+        }
+
+        function dragEnd() {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+            block.classList.remove('dragging');
+        }
+
+        function setTranslate(xPos, yPos, el) {
+            el.style.transform = `translate(${xPos}px, ${yPos}px)`;
+        }
+    </script>
+</body>
+</html>
